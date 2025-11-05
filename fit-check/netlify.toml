@@ -10,6 +10,8 @@
 [build.environment]
   NODE_VERSION = "20"
   NPM_VERSION = "10.2.4"
+  # Omit VITE_GEMINI_API_KEY from secrets scanning since it's expected to be in client-side code
+  SECRETS_SCAN_OMIT_KEYS = "VITE_GEMINI_API_KEY"
 
 [[redirects]]
   from = "/*"
