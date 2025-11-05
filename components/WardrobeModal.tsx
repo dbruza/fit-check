@@ -63,25 +63,8 @@ const urlToFile = async (url: string, filename: string): Promise<File> => {
     }
 };
 
-const GARMENT_TYPES = [
-    'T-Shirt',
-    'Hoodie / Sweatshirt',
-    'Jacket / Coat',
-    'Dress',
-    'Pants / Jeans',
-    'Shorts',
-    'Skirt',
-    'Shoes',
-    'Hat',
-    'Glasses',
-    'Other'
-];
-
 const WardrobePanel: React.FC<WardrobePanelProps> = ({ onGarmentSelect, activeGarmentIds, isLoading, wardrobe }) => {
     const [error, setError] = useState<string | null>(null);
-    const [pendingFile, setPendingFile] = useState<File | null>(null);
-    const [showGarmentTypeModal, setShowGarmentTypeModal] = useState(false);
-    const [selectedGarmentType, setSelectedGarmentType] = useState<string>('');
 
     const handleGarmentClick = async (item: WardrobeItem) => {
         if (isLoading || activeGarmentIds.includes(item.id)) return;
@@ -105,33 +88,14 @@ const WardrobePanel: React.FC<WardrobePanelProps> = ({ onGarmentSelect, activeGa
                 setError('Please select an image file.');
                 return;
             }
-            // Show modal to select garment type
-            setPendingFile(file);
-            setShowGarmentTypeModal(true);
+            // Directly process the file without garment type selection
+            const customGarmentInfo: WardrobeItem = {
+                id: `custom-${Date.now()}`,
+                name: file.name,
+                url: URL.createObjectURL(file),
+            };
+            onGarmentSelect(file, customGarmentInfo);
         }
-    };
-
-    const handleGarmentTypeConfirm = () => {
-        if (!pendingFile || !selectedGarmentType) return;
-        
-        const customGarmentInfo: WardrobeItem = {
-            id: `custom-${Date.now()}`,
-            name: pendingFile.name,
-            url: URL.createObjectURL(pendingFile),
-            garmentType: selectedGarmentType,
-        };
-        onGarmentSelect(pendingFile, customGarmentInfo);
-        
-        // Reset state
-        setPendingFile(null);
-        setShowGarmentTypeModal(false);
-        setSelectedGarmentType('');
-    };
-
-    const handleGarmentTypeCancel = () => {
-        setPendingFile(null);
-        setShowGarmentTypeModal(false);
-        setSelectedGarmentType('');
     };
 
   return (
@@ -170,46 +134,6 @@ const WardrobePanel: React.FC<WardrobePanelProps> = ({ onGarmentSelect, activeGa
              <p className="text-center text-sm text-gray-500 mt-4">Your uploaded garments will appear here.</p>
         )}
         {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
-        
-        {/* Garment Type Selection Modal */}
-        {showGarmentTypeModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={handleGarmentTypeCancel}>
-                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-                    <h3 className="text-xl font-serif font-bold text-gray-900 mb-4">What type of garment is this?</h3>
-                    <p className="text-sm text-gray-600 mb-4">This helps the AI apply the clothing more accurately.</p>
-                    <div className="space-y-2 mb-6">
-                        {GARMENT_TYPES.map((type) => (
-                            <button
-                                key={type}
-                                onClick={() => setSelectedGarmentType(type)}
-                                className={`w-full text-left px-4 py-3 rounded-md border-2 transition-all ${
-                                    selectedGarmentType === type
-                                        ? 'border-gray-900 bg-gray-100'
-                                        : 'border-gray-200 hover:border-gray-400'
-                                }`}
-                            >
-                                {type}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={handleGarmentTypeCancel}
-                            className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleGarmentTypeConfirm}
-                            disabled={!selectedGarmentType}
-                            className="flex-1 px-4 py-2 text-white bg-gray-900 rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Confirm
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )}
     </div>
   );
 };
