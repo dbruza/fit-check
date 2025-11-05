@@ -106,13 +106,32 @@ const handleApiResponse = (response: GenerateContentResponse): string => {
     throw new Error(errorMessage);
 };
 
+// Helper function to check if API key is available
+export const checkApiKey = (): { available: boolean; message?: string } => {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'undefined' || apiKey.trim() === '') {
+    return {
+      available: false,
+      message: 'API Key is not configured. Please set VITE_GEMINI_API_KEY environment variable in Netlify build settings.'
+    };
+  }
+  return { available: true };
+};
+
 // Get API key from environment variable - lazy initialization
 const getAI = () => {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('An API Key must be set when running in a browser. Please set VITE_GEMINI_API_KEY environment variable in Netlify.');
+  if (!apiKey || apiKey === 'undefined' || apiKey.trim() === '') {
+    throw new Error('API Key is not configured. Please set VITE_GEMINI_API_KEY environment variable in Netlify build settings under Site Settings > Environment Variables.');
   }
-  return new GoogleGenAI({ apiKey });
+  try {
+    return new GoogleGenAI({ apiKey });
+  } catch (error: any) {
+    if (error.message && error.message.includes('API Key')) {
+      throw new Error('API Key is not configured. Please set VITE_GEMINI_API_KEY environment variable in Netlify build settings under Site Settings > Environment Variables.');
+    }
+    throw error;
+  }
 };
 
 const model = 'gemini-2.5-flash-image';
